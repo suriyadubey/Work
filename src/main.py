@@ -20,7 +20,7 @@ def execute_pipeline(target_file_path: str):
         return
 
     # Define fixed output directory
-    output_base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../output/dataquik/table"))
+    output_base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../data/output/dataquik/table"))
     
     print(f"🚀 Initializing Pipeline Run -> Target Output: {output_base_dir}")
     
