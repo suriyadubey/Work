@@ -49,6 +49,26 @@ converter/
 - **Validation Engine**: Sanitizes data types and ensures metadata constraints are met before output generation.
 - **Windows Console Emoji Compatibility**: Automatically reconfigures console streams to UTF-8 on Windows systems, preventing crashes when printing status emojis.
 
+## 🔍 System & Architectural Overview
+
+The application is split into four distinct pipeline stages to maintain a modular and robust structure:
+
+1. **Pipeline Runner (`src/main.py`)**:
+   - Manages the execution flow, supports target files passed via command line arguments, and automatically scans the `data/input/` directory for files when run without parameters (filtering out temporary lock files like `~$*`).
+   - Standardizes system output and error console encoding to UTF-8 on Windows environments, preventing formatting exceptions when writing status emojis.
+
+2. **Excel Extractor & Parser (`src/extract/excel_reader.py`)**:
+   - Reads the spreadsheet data and targets the `TBL and COL` sheet.
+   - Iterates through the rows, dynamically parses column mappings based on active section header markers (`Table` vs. `Column`), cleans text types, normalizes float values into integers, preserves booleans, and trims wrapping double-quotes from cells (e.g., `'"1*"'` becomes `"1*"`).
+
+3. **Data Constraint Validators (`src/transform/validators.py`)**:
+   - Asserts constraints specified in the requirements notes (verifying FSN string limits, alphanumeric conditions for ALIAS references, column descriptions, and bracket formats).
+   - Generates formatted console warnings when violations are detected.
+
+4. **Structured JSON Loaders (`src/load/json_writer.py`)**:
+   - Organizes output payloads into lowercased `FID` subfolders inside a distinct timestamped session run folder.
+   - Automatically splits definitions: writes a single `<FID>.TBL` file for database tables, and separate `<FID>-<DI>.COL` files for each individual column definition.
+
 ---
 
 ## 🛠️ Installation
