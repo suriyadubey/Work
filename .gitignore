@@ -1,4 +1,5 @@
 data/output/
+output/
 __pycache__/
 .pytest_cache/
 .vs/

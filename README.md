@@ -10,8 +10,11 @@ A robust Python-based schema extractor, validator, and pipeline utility. It pars
 converter/
 │
 ├── data/
-│   ├── input/                  # Place raw .xlsx or .csv input files here (e.g., input.xlsx)
-│   └── output/                 # Timestamped run session folders containing output files
+│   └── input/                  # Place raw .xlsx or .csv input files here (e.g., input.xlsx)
+│
+├── output/
+│   └── dataquik/
+│       └── table/              # Output directory where generated files are placed and overwritten on each run
 │
 ├── src/
 │   ├── __init__.py
@@ -46,6 +49,7 @@ converter/
 - **Structured File Partitioning**:
   - Generates a single `<FID>.TBL` file for table definitions.
   - Generates individual `<FID>-<DI>.COL` files for every column record.
+  - Overwrites and refreshes all files in `output/dataquik/table/` on each run.
 - **Validation Engine**: Sanitizes data types and ensures metadata constraints are met before output generation.
 - **Windows Console Emoji Compatibility**: Automatically reconfigures console streams to UTF-8 on Windows systems, preventing crashes when printing status emojis.
 
@@ -66,7 +70,7 @@ The application is split into four distinct pipeline stages to maintain a modula
    - Generates formatted console warnings when violations are detected.
 
 4. **Structured JSON Loaders (`src/load/json_writer.py`)**:
-   - Organizes output payloads into lowercased `FID` subfolders inside a distinct timestamped session run folder.
+   - Organizes output payloads into lowercased `FID` subfolders inside the fixed `output/dataquik/table/` folder.
    - Automatically splits definitions: writes a single `<FID>.TBL` file for database tables, and separate `<FID>-<DI>.COL` files for each individual column definition.
 
 ---
@@ -115,7 +119,7 @@ The processor validates definitions against the following strict constraints:
 
 ## 📦 Output Format Examples
 
-Generated files are structured into subfolders named after each lowercased `FID` (e.g., `zutblcusttyp/`) inside a timestamped session folder in `data/output/`.
+Generated files are structured into subfolders named after each lowercased `FID` (e.g., `zutblcusttyp/`) inside the `output/dataquik/table/` directory, which is refreshed and overwritten on every run.
 
 ### Table schema file sample (`ZUTBLCUSTTYP.TBL`)
 ```json

@@ -2,7 +2,7 @@
 import os
 import sys
 import pandas as pd
-from datetime import datetime
+import shutil
 from src.extract.excel_reader import load_data_file, parse_mixed_excel
 from src.extract.factory import get_processor_by_headers
 from src.load.json_writer import write_output_json, write_mixed_output_json
@@ -19,11 +19,18 @@ def execute_pipeline(target_file_path: str):
         print(f"❌ File path error: {target_file_path} cannot be found.")
         return
 
-    # Create distinct timestamped session folder
-    session_stamp = datetime.now().strftime("output_%Y%m%d_%H%M%S")
-    output_base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../data/output", session_stamp))
+    # Define fixed output directory
+    output_base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../output/dataquik/table"))
     
-    print(f"🚀 Initializing Session Run: {session_stamp}")
+    print(f"🚀 Initializing Pipeline Run -> Target Output: {output_base_dir}")
+    
+    # Replace existing files by clearing output directory on each run
+    if os.path.exists(output_base_dir):
+        try:
+            shutil.rmtree(output_base_dir)
+        except Exception as e:
+            print(f"⚠️  Warning: Could not clear output directory: {e}")
+    os.makedirs(output_base_dir, exist_ok=True)
     
     try:
         is_mixed_excel = False
