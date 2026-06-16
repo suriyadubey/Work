@@ -48,9 +48,9 @@ def write_mixed_output_json(tables: dict, columns: dict, session_dir: str):
                     with open(col_path, 'w', encoding='utf-8') as f:
                         json.dump(col, f, indent=4, ensure_ascii=False)
 
-def write_serial_output(sections_to_write: list, session_dir: str, append: bool = False):
+def write_serial_output(sections_to_write: list, session_dir: str):
     """
-    Saves or appends serial rows:
+    Saves serial rows:
     - sections_to_write: list of dicts: [{"name": section_name, "rows": [row_dict, ...]}]
     - session_dir: data/output/data/
     """
@@ -69,8 +69,7 @@ def write_serial_output(sections_to_write: list, session_dir: str, append: bool 
         file_name = f"{table_name.upper()}.serial"
         full_path = os.path.join(target_dir, file_name)
         
-        mode = 'a' if append else 'w'
-        with open(full_path, mode, encoding='utf-8') as f:
+        with open(full_path, 'w', encoding='utf-8') as f:
             for row in rows:
                 row_str = json.dumps(row, ensure_ascii=False)
                 f.write(f"{section_name} {row_str}\n")

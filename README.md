@@ -11,7 +11,6 @@ converter/
 │
 ├── data/
 │   ├── input/                  # Place raw .xlsx or .csv input files here (e.g., input.xlsx)
-│   ├── .process_state.json     # Tracks processed row hashes for incremental execution
 │   └── output/
 │       ├── data/               # Output directory where generated .serial files are placed
 │       └── dataquik/
@@ -19,7 +18,7 @@ converter/
 │
 ├── src/
 │   ├── __init__.py
-│   ├── main.py                 # Core runner (handles arguments, state, and fallback runs)
+│   ├── main.py                 # Core runner (handles arguments and fallback runs)
 │   │
 │   ├── extract/
 │   │   ├── __init__.py
@@ -31,12 +30,11 @@ converter/
 │   │   ├── __init__.py
 │   │   ├── table_parser.py     # Row parser fallback logic (Table)
 │   │   ├── column_parser.py    # Row parser fallback logic (Column)
-│   │   ├── state_manager.py    # Logic for loading/saving incremental process hashes
 │   │   └── validators.py       # Strict metadata validators (FSN length, ALIAS format, etc.)
 │   │
 │   └── load/
 │       ├── __init__.py
-│       └── json_writer.py      # Outputs TBL/COL files and writes/appends .serial files
+│       └── json_writer.py      # Outputs TBL/COL files and writes .serial files
 │
 ├── .gitignore                  # Keeps outputs and caches out of source control
 ├── requirements.txt            # Project dependencies (pandas, openpyxl)
@@ -49,7 +47,6 @@ converter/
 
 - **Mixed-Layout Sheet Processor**: Dynamically parses the `TBL and COL` sheet of Excel workbooks (`data/input/input.xlsx`), extracting both Table and Column structures from mixed-format rows.
 - **Serial Schema Parser**: Dynamically extracts tables from the `serial-full` sheet and serializes them as `.serial` files in format `<SectionName> <JSON_of_row>`.
-- **Incremental Runner**: Executes only newly added rows across both sheets by tracking processed row hashes in `data/.process_state.json`.
 - **Automated Scanning**: Automatically scans the `data/input/` directory for `.xlsx` and `.csv` files when run without parameters (ignoring Excel lock files like `~$input.xlsx`).
 - **Flexible Entrypoint**: Supports target file routing via command-line arguments.
 - **Structured File Partitioning**:
@@ -98,28 +95,17 @@ The application is split into four distinct pipeline stages to maintain a modula
 
 ## 🚀 Usage
 
-### 1. Full Run (Default)
-Processes all sheets from scratch, clearing output directories and generating everything:
+### 1. Automatic Directory Execution (Recommended)
+Place your `.xlsx` or `.csv` spreadsheets in the `data/input/` directory and run:
 ```bash
 py -m src.main
-# or run a specific file
+```
+This scans all valid files in the directory and automatically processes them.
+
+### 2. Manual Target Execution
+To run the converter on a specific file, pass it as a command line argument:
+```bash
 py -m src.main data/input/input.xlsx
-```
-
-### 2. Incremental Run
-Detects and processes only newly added rows, appending new records to `.serial` files and creating/overwriting specific `.TBL` and `.COL` files:
-```bash
-py -m src.main -i
-# or run a specific file incrementally
-py -m src.main data/input/input.xlsx -i
-```
-
-### 3. Force Full Run
-Forces a full execution from scratch, resetting the processed row states:
-```bash
-py -m src.main -f
-# or force a run on a specific file
-py -m src.main data/input/input.xlsx -f
 ```
 
 ---

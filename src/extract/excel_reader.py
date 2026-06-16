@@ -1,5 +1,6 @@
 # src/extract/excel_reader.py
 import pandas as pd
+# pyrefly: ignore [missing-import]
 import numpy as np
 
 def load_data_file(file_path: str) -> pd.DataFrame:
@@ -13,19 +14,17 @@ def load_data_file(file_path: str) -> pd.DataFrame:
     df = df.map(lambda x: str(x).replace('\xa0', '').strip() if isinstance(x, str) else x)
     return df.replace(r'^\s*$', np.nan, regex=True) # Normalize blanks to NaN
 
-def parse_mixed_excel(file_path: str, tbl_col_hashes: set = None):
+def parse_mixed_excel(file_path: str):
     """
     Parses the TBL and COL sheet of the Excel workbook, dynamically
-    mapping Table and Column rows and returning (tables_dict, columns_dict, processed_hashes).
+    mapping Table and Column rows and returning (tables_dict, columns_dict).
     """
     from src.transform.validators import verify_constraints
-    from src.transform.state_manager import get_row_hash
     
     df = pd.read_excel(file_path, sheet_name='TBL and COL', header=None)
     
     tables = {}
     columns = {}
-    processed_hashes = []
     
     current_type = None
     current_headers = None
@@ -90,13 +89,6 @@ def parse_mixed_excel(file_path: str, tbl_col_hashes: set = None):
             if not row_dict:
                 continue
                 
-            row_hash = get_row_hash(row_dict)
-            processed_hashes.append(row_hash)
-            
-            if tbl_col_hashes is not None:
-                if row_hash in tbl_col_hashes:
-                    continue
-                
             verify_constraints(row_dict, current_type.upper())
             
             if current_type == 'Table':
@@ -106,4 +98,4 @@ def parse_mixed_excel(file_path: str, tbl_col_hashes: set = None):
                     columns[fid] = []
                 columns[fid].append(row_dict)
                 
-    return tables, columns, processed_hashes
+    return tables, columns
