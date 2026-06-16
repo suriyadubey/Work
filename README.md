@@ -126,11 +126,12 @@ py -m src.main data/input/input.xlsx -f
 
 ## ⚙️ Metadata Validations & Rules
 
-The processor validates definitions against the following strict constraints:
+The processor validates definitions and enforces types against the following strict constraints:
 - **Table.FSN**: Must not exceed 12 characters.
 - **Column.ALIAS**: Can contain alphanumeric characters only (no spaces or special symbols).
 - **Column.DES**: Must not exceed 40 characters.
 - **Column.TBL**: Reference table names must be enclosed in brackets `[]` (e.g. `[STBLPERS]`).
+- **Serial.Value Integrity**: Cell value formatting (such as leading zeros like `"00000"` or `"010"`) is strictly preserved as strings. Cells containing explicit `(null)` values or empty fields are treated as null and their keys are omitted from the row JSON.
 
 ---
 
@@ -167,4 +168,12 @@ Generated files are structured into subfolders named after each lowercased `FID`
     "ALIAS": "CustomerType",
     "REQ": true
 }
+```
+
+### Serial data file sample (`ZUTBLRISKLEVEL.serial`)
+Generated `.serial` files reside in `data/output/data/{table_name}/` and write each record on a single line starting with the section name followed by its JSON data:
+```text
+RecordZUTBLRISKLEVEL {"RISKLEVEL": 1, "DESC": "Low Risk Level"}
+RecordZUTBLRISKLEVEL {"RISKLEVEL": 2, "DESC": "Medium Risk Level"}
+RecordZUTBLRISKLEVEL {"RISKLEVEL": 3, "DESC": "Hight Risk Level"}
 ```
