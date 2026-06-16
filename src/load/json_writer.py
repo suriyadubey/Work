@@ -48,28 +48,45 @@ def write_mixed_output_json(tables: dict, columns: dict, session_dir: str):
                     with open(col_path, 'w', encoding='utf-8') as f:
                         json.dump(col, f, indent=4, ensure_ascii=False)
 
-def write_serial_output(sections_to_write: list, session_dir: str):
+def write_serial_output(sections_to_write: list, session_dir: str, single_file_per_record: bool = False):
     """
     Saves serial rows:
-    - sections_to_write: list of dicts: [{"name": section_name, "rows": [row_dict, ...]}]
+    - sections_to_write: list of dicts: [{"name": section_name, "headers": [...], "key_headers": [...], "rows": [row_dict, ...]}]
     - session_dir: data/output/data/
+    - single_file_per_record: if True, writes one file per record (row); if False, writes one file per section/table.
     """
+    os.makedirs(session_dir, exist_ok=True)
+    
     for section in sections_to_write:
         section_name = section["name"]
         rows = section["rows"]
+        key_headers = section.get("key_headers", [])
         if not rows:
             continue
             
         # Table name is section name without "Record" prefix, stripped
         table_name = section_name.replace("Record", "").strip()
-        table_lower = table_name.lower()
-        target_dir = os.path.join(session_dir, table_lower)
-        os.makedirs(target_dir, exist_ok=True)
         
-        file_name = f"{table_name.upper()}.serial"
-        full_path = os.path.join(target_dir, file_name)
-        
-        with open(full_path, 'w', encoding='utf-8') as f:
+        if single_file_per_record:
             for row in rows:
-                row_str = json.dumps(row, ensure_ascii=False)
-                f.write(f"{section_name} {row_str}\n")
+                key_vals = []
+                for k in key_headers:
+                    val = row.get(k)
+                    if val is not None:
+                        key_vals.append(str(val))
+                
+                suffix = "-" + "-".join(key_vals) if key_vals else ""
+                file_name = f"{table_name.upper()}{suffix}.serial"
+                full_path = os.path.join(session_dir, file_name)
+                
+                with open(full_path, 'w', encoding='utf-8') as f:
+                    row_str = json.dumps(row, ensure_ascii=False)
+                    f.write(f"{section_name} {row_str}\n")
+        else:
+            file_name = f"{table_name.upper()}.serial"
+            full_path = os.path.join(session_dir, file_name)
+            
+            with open(full_path, 'w', encoding='utf-8') as f:
+                for row in rows:
+                    row_str = json.dumps(row, ensure_ascii=False)
+                    f.write(f"{section_name} {row_str}\n")

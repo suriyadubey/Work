@@ -23,7 +23,7 @@ converter/
 │   ├── extract/
 │   │   ├── __init__.py
 │   │   ├── excel_reader.py     # File loader & TBL/COL parsing logic
-│   │   ├── serial_reader.py    # Parsers for serial-full sheets
+│   │   ├── serial_reader.py    # Parsers for serial-full and serial-key sheets
 │   │   └── factory.py          # Header block factory routing
 │   │
 │   ├── transform/
@@ -46,13 +46,13 @@ converter/
 ## ✨ Features
 
 - **Mixed-Layout Sheet Processor**: Dynamically parses the `TBL and COL` sheet of Excel workbooks (`data/input/input.xlsx`), extracting both Table and Column structures from mixed-format rows.
-- **Serial Schema Parser**: Dynamically extracts tables from the `serial-full` sheet and serializes them as `.serial` files in format `<SectionName> <JSON_of_row>`.
+- **Serial Schema Parser**: Dynamically extracts tables from both `serial-full` (generating one file per table) and `serial-key` (generating one file per record using key columns ending with `*`) sheets. All serial outputs are saved directly inside `data/output/data/`.
 - **Automated Scanning**: Automatically scans the `data/input/` directory for `.xlsx` and `.csv` files when run without parameters (ignoring Excel lock files like `~$input.xlsx`).
 - **Flexible Entrypoint**: Supports target file routing via command-line arguments.
 - **Structured File Partitioning**:
   - Generates a single `<FID>.TBL` file for table definitions.
   - Generates individual `<FID>-<DI>.COL` files for every column record.
-  - Generates single `<FID>.serial` files with compact JSON rows.
+  - Generates single `<FID>.serial` files (for `serial-full`) or individual `<FID>-<Key1>-<Key2>...serial` files (for `serial-key`).
 - **Validation Engine**: Sanitizes data types and ensures metadata constraints are met before output generation.
 - **Windows Console Emoji Compatibility**: Automatically reconfigures console streams to UTF-8 on Windows systems, preventing crashes when printing status emojis.
 
@@ -118,6 +118,7 @@ The processor validates definitions and enforces types against the following str
 - **Column.DES**: Must not exceed 40 characters.
 - **Column.TBL**: Reference table names must be enclosed in brackets `[]` (e.g. `[STBLPERS]`).
 - **Serial.Value Integrity**: Cell value formatting (such as leading zeros like `"00000"` or `"010"`) is strictly preserved as strings. Cells containing explicit `(null)` values or empty fields are treated as null and their keys are omitted from the row JSON.
+- **Serial-Key Columns**: For `serial-key` sheet records, columns ending in `*` indicate key columns; these are stripped of `*` in the generated JSON but are used as a dash-separated suffix in the individual record filename.
 
 ---
 
@@ -156,10 +157,16 @@ Generated files are structured into subfolders named after each lowercased `FID`
 }
 ```
 
-### Serial data file sample (`ZUTBLRISKLEVEL.serial`)
-Generated `.serial` files reside in `data/output/data/{table_name}/` and write each record on a single line starting with the section name followed by its JSON data:
+### Serial data file sample (`ZUTBLRISKLEVEL.serial` - from `serial-full`)
+Generated `.serial` files for `serial-full` reside directly inside `data/output/data/` (one file per table containing all records):
 ```text
 RecordZUTBLRISKLEVEL {"RISKLEVEL": 1, "DESC": "Low Risk Level"}
 RecordZUTBLRISKLEVEL {"RISKLEVEL": 2, "DESC": "Medium Risk Level"}
 RecordZUTBLRISKLEVEL {"RISKLEVEL": 3, "DESC": "Hight Risk Level"}
+```
+
+### Serial record file sample (`UTBLTRNTLRP-Teller.transferAction-CD-CCINP.serial` - from `serial-key`)
+Generated `.serial` files for `serial-key` reside directly inside `data/output/data/` (one file per record):
+```text
+RecordUTBLTRNTLRP {"ACTION": "Teller.transferAction", "GRP": "CD", "ETC": "CCINP", "CATEGORY": "TFER_FROM", "SORTORDER": 40, "TLABEL": "CD Closeout w/ Int w/o Pen", "TLDESC": "CD Closeout w/ Int"}
 ```

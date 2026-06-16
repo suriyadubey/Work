@@ -46,7 +46,7 @@ def execute_pipeline(target_file_path: str):
             except Exception:
                 pass
 
-        if is_excel and ('TBL and COL' in sheet_names or 'serial-full' in sheet_names):
+        if is_excel and ('TBL and COL' in sheet_names or 'serial-full' in sheet_names or 'serial-key' in sheet_names):
             # 1. Process TBL and COL sheet
             if 'TBL and COL' in sheet_names:
                 print("📄 Processing 'TBL and COL' sheet...")
@@ -62,14 +62,26 @@ def execute_pipeline(target_file_path: str):
             # 2. Process serial-full sheet
             if 'serial-full' in sheet_names:
                 print("📄 Processing 'serial-full' sheet...")
-                sections_to_write = parse_serial_sheet(target_file_path)
+                sections_to_write = parse_serial_sheet(target_file_path, 'serial-full')
                 
                 # Write outputs
                 if sections_to_write:
-                    write_serial_output(sections_to_write, serial_output_dir)
-                    print(f"✅ Processed and wrote serial outputs. Affected Sections: {len(sections_to_write)}")
+                    write_serial_output(sections_to_write, serial_output_dir, single_file_per_record=False)
+                    print(f"✅ Processed and wrote serial-full outputs. Affected Sections: {len(sections_to_write)}")
                 else:
-                    print("ℹ️  No serial rows found to process.")
+                    print("ℹ️  No serial-full rows found to process.")
+            
+            # 3. Process serial-key sheet
+            if 'serial-key' in sheet_names:
+                print("📄 Processing 'serial-key' sheet...")
+                sections_to_write_key = parse_serial_sheet(target_file_path, 'serial-key')
+                
+                # Write outputs
+                if sections_to_write_key:
+                    write_serial_output(sections_to_write_key, serial_output_dir, single_file_per_record=True)
+                    print(f"✅ Processed and wrote serial-key outputs. Affected Sections: {len(sections_to_write_key)}")
+                else:
+                    print("ℹ️  No serial-key rows found to process.")
             
             print(f"✨ Job Completed. Manifest data saved to:\n📦 TBL/COL: {tbl_col_output_dir}\n📦 Serial: {serial_output_dir}")
             

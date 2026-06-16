@@ -4,22 +4,23 @@ import os
 import pandas as pd
 import numpy as np
 
-def parse_serial_sheet(file_path: str):
+def parse_serial_sheet(file_path: str, sheet_name: str = "serial-full"):
     """
-    Parses the 'serial-full' sheet of the Excel workbook using openpyxl
+    Parses a serial sheet of the Excel workbook using openpyxl
     to ensure exact data types and formats are preserved (especially leading zeros).
     
     Args:
         file_path: Path to the target excel file.
+        sheet_name: Name of the sheet to parse (e.g. 'serial-full' or 'serial-key').
         
     Returns:
-        sections_to_write: list of dicts: [{"name": section_name, "rows": [row_dict, ...]}]
+        sections_to_write: list of dicts: [{"name": section_name, "headers": [...], "key_headers": [...], "rows": [row_dict, ...]}]
     """
     wb = load_workbook(file_path, data_only=True)
-    if "serial-full" not in wb.sheetnames:
+    if sheet_name not in wb.sheetnames:
         return []
         
-    sheet = wb["serial-full"]
+    sheet = wb[sheet_name]
     sections_to_write = []
     
     # Helper to clean values preserving string formatting
@@ -77,20 +78,29 @@ def parse_serial_sheet(file_path: str):
             current_section = {
                 "name": section_name,
                 "headers": [],
+                "key_headers": [],
                 "rows": []
             }
             
             # Read headers from the next row (r+1)
             headers_row = r + 1
             current_headers = []
+            key_headers = []
             c = 1
             while True:
                 h_val = sheet.cell(row=headers_row, column=c).value
                 if h_val is None:
                     break
-                current_headers.append(str(h_val).strip())
+                h_str = str(h_val).strip()
+                if h_str.endswith("*"):
+                    stripped = h_str[:-1].strip()
+                    current_headers.append(stripped)
+                    key_headers.append(stripped)
+                else:
+                    current_headers.append(h_str)
                 c += 1
             current_section["headers"] = current_headers
+            current_section["key_headers"] = key_headers
             
             r += 2
             continue
