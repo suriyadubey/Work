@@ -34,6 +34,12 @@ def parse_serial_sheet(file_path: str, sheet_name: str = "serial-full"):
                 return int(val)
             return val
         if isinstance(val, str):
+            # Check for non-printable characters (excluding \xa0 and standard printables/newlines/tabs)
+            temp_check = val.replace('\xa0', '')
+            for char in temp_check:
+                if not char.isprintable() and char not in ('\n', '\r', '\t'):
+                    return None
+
             val = val.strip()
             if val == "(null)":
                 return None
@@ -46,6 +52,7 @@ def parse_serial_sheet(file_path: str, sheet_name: str = "serial-full"):
                 return True
             if val.lower() == 'false':
                 return False
+
             # Keep string with leading zeroes as string
             if val.isdigit() and val.startswith('0') and len(val) > 1:
                 return val

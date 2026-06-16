@@ -10,8 +10,18 @@ def load_data_file(file_path: str) -> pd.DataFrame:
     else:
         df = pd.read_excel(file_path, keep_default_na=False)
     
-    # Automatically remove hidden spaces (\xa0) and non-printables
-    df = df.map(lambda x: str(x).replace('\xa0', '').strip() if isinstance(x, str) else x)
+    # Automatically remove hidden spaces (\xa0) and check for non-printables
+    def clean_raw_val(x):
+        if not isinstance(x, str):
+            return x
+        # Check for non-printables on the unstripped string (excluding \xa0)
+        temp_check = x.replace('\xa0', '')
+        for char in temp_check:
+            if not char.isprintable() and char not in ('\n', '\r', '\t'):
+                return None
+        return x.replace('\xa0', '').strip()
+
+    df = df.map(clean_raw_val)
     return df.replace(r'^\s*$', np.nan, regex=True) # Normalize blanks to NaN
 
 def parse_mixed_excel(file_path: str):
@@ -41,6 +51,12 @@ def parse_mixed_excel(file_path: str):
         if isinstance(val, (int, np.integer)):
             return int(val)
         if isinstance(val, str):
+            # Check for non-printable characters (excluding \xa0 and standard printables/newlines/tabs)
+            temp_check = val.replace('\xa0', '')
+            for char in temp_check:
+                if not char.isprintable() and char not in ('\n', '\r', '\t'):
+                    return None
+
             val = val.strip()
             if len(val) >= 2 and val.startswith('"') and val.endswith('"'):
                 val = val[1:-1]
@@ -51,6 +67,7 @@ def parse_mixed_excel(file_path: str):
             val = val.replace('\xa0', '').strip()
             if not val:
                 return None
+
             try:
                 return int(val)
             except ValueError:
