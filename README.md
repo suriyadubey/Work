@@ -118,6 +118,7 @@ The processor validates definitions and enforces types against the following str
 - **Column.DES**: Must not exceed 40 characters.
 - **Column.TBL**: Reference table names must be enclosed in brackets `[]` (e.g. `[STBLPERS]`).
 - **Serial.Value Integrity**: Cell value formatting (such as leading zeros like `"00000"` or `"010"`) is strictly preserved as strings. Cells containing explicit `(null)` values or empty fields are treated as null and their keys are omitted from the row JSON.
+- **Non-Printable Characters**: Cells containing invalid non-printable characters (other than standard whitespaces, newlines, and tabs) are automatically resolved to a null value (`None` / `null` in JSON).
 - **Serial-Key Columns**: For `serial-key` sheet records, columns ending in `*` indicate key columns; these are stripped of `*` in the generated JSON but are used as a dash-separated suffix in the individual record filename.
 
 ---
