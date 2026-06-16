@@ -13,17 +13,19 @@ def load_data_file(file_path: str) -> pd.DataFrame:
     df = df.map(lambda x: str(x).replace('\xa0', '').strip() if isinstance(x, str) else x)
     return df.replace(r'^\s*$', np.nan, regex=True) # Normalize blanks to NaN
 
-def parse_mixed_excel(file_path: str):
+def parse_mixed_excel(file_path: str, tbl_col_hashes: set = None):
     """
     Parses the TBL and COL sheet of the Excel workbook, dynamically
-    mapping Table and Column rows and returning (tables_dict, columns_dict).
+    mapping Table and Column rows and returning (tables_dict, columns_dict, processed_hashes).
     """
     from src.transform.validators import verify_constraints
+    from src.transform.state_manager import get_row_hash
     
     df = pd.read_excel(file_path, sheet_name='TBL and COL', header=None)
     
     tables = {}
     columns = {}
+    processed_hashes = []
     
     current_type = None
     current_headers = None
@@ -88,6 +90,13 @@ def parse_mixed_excel(file_path: str):
             if not row_dict:
                 continue
                 
+            row_hash = get_row_hash(row_dict)
+            processed_hashes.append(row_hash)
+            
+            if tbl_col_hashes is not None:
+                if row_hash in tbl_col_hashes:
+                    continue
+                
             verify_constraints(row_dict, current_type.upper())
             
             if current_type == 'Table':
@@ -97,4 +106,4 @@ def parse_mixed_excel(file_path: str):
                     columns[fid] = []
                 columns[fid].append(row_dict)
                 
-    return tables, columns
+    return tables, columns, processed_hashes

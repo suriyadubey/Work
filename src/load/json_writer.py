@@ -47,3 +47,30 @@ def write_mixed_output_json(tables: dict, columns: dict, session_dir: str):
                     col_path = os.path.join(target_dir, f"{fid.upper()}-{str(di_val).upper()}.COL")
                     with open(col_path, 'w', encoding='utf-8') as f:
                         json.dump(col, f, indent=4, ensure_ascii=False)
+
+def write_serial_output(sections_to_write: list, session_dir: str, append: bool = False):
+    """
+    Saves or appends serial rows:
+    - sections_to_write: list of dicts: [{"name": section_name, "rows": [row_dict, ...]}]
+    - session_dir: data/output/data/
+    """
+    for section in sections_to_write:
+        section_name = section["name"]
+        rows = section["rows"]
+        if not rows:
+            continue
+            
+        # Table name is section name without "Record" prefix, stripped
+        table_name = section_name.replace("Record", "").strip()
+        table_lower = table_name.lower()
+        target_dir = os.path.join(session_dir, table_lower)
+        os.makedirs(target_dir, exist_ok=True)
+        
+        file_name = f"{table_name.upper()}.serial"
+        full_path = os.path.join(target_dir, file_name)
+        
+        mode = 'a' if append else 'w'
+        with open(full_path, mode, encoding='utf-8') as f:
+            for row in rows:
+                row_str = json.dumps(row, ensure_ascii=False)
+                f.write(f"{section_name} {row_str}\n")
